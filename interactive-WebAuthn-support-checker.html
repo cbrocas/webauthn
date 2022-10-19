@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="cookies.js"></script>
+    <script type="text/javascript" src="platform.js"></script>
+    <title>WebAuthen Support Testing Page</title>
+</head>
+
+<body>
+    <tt>
+        <script>
+            var WebAuthnSupport = "";
+            var content = "WebAuthn Support Level:<br>";
+
+            // Check if the browser has already been tested for its Webauthn support. 
+            // If it is the case, a cookie has been set previously.
+            // So, we use the values present in the cookie to get platform info and support capabilities.
+
+            if (isCookieSet('WebAuthnCookie')) {
+                cookieVals = getCookie('WebAuthnCookie').split('|');
+                content += "-- Browser: " + cookieVals[2] + ", " + cookieVals[3] + "<br>";
+                content += "-- platform: " + cookieVals[4] + ", " + cookieVals[5] + "<br>";
+                content += "-- [" + cookieVals[0] + "]</b> Webauthn browser support<br>";
+                content += "-- [" + cookieVals[1] + "]</b> Platform authenticator support<br><br>";
+                content += "-- Note: you already came to this page (\'WebAuthnCookie\' cookie is set).<br>-- Support values & platform version have been extracted from this cookie.";
+                document.write(content);
+            }
+            else {
+                // Cookie is NOT set, so it is the first time this browser executes this script.
+                // So we are going to collect the platform/browser info and test WebAuthn+platform authenticator support.
+
+                // Get platform info
+                content += "-- Browser: " + platform.name + ", " + platform.version + "<br>";
+                content += "-- platform: " + platform.product + ", " + platform.os + "<br>";
+                
+                // Check if the browser supports Webauthn authentication.
+                if (window.PublicKeyCredential) {
+                    // Check  if the browser has access to a platform authenticator.
+                    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then((available) => {
+                        if (available) {
+                            content += "-- [OK]</b> Webauthn browser support<br>";
+                            content += "-- [OK]</b> Platform authenticator support<br><br>";
+                            content += "-- Note: first try, \'WebAuthnSupport\' cookie NOT set.";
+                            WebAuthnSupport += 'OK|OK|' + encodeURI(platform.name +  '|' + platform.version + '|' + platform.product + '|' + platform.os) ;
+                            
+                            sendInfo('https://www.brocas.org/webauthn/report', WebAuthnSupport);
+                            setCookie('WebAuthnCookie', WebAuthnSupport, 7);
+                            document.write(content);
+                        } else {
+                            content += "-- [OK]</b> Webauthn browser support<br>";
+                            content += "-- [KO]</b> Platform authenticator support<br><br>";
+                            content += "-- Note: first try, \'WebAuthnSupport\' cookie NOT set.";
+                            WebAuthnSupport += 'OK|KO|' + encodeURI(platform.name +  '|' + platform.version + '|' + platform.product + '|' + platform.os) ;
+
+                            sendInfo('https://www.brocas.org/webauthn/report', WebAuthnSupport);
+                            setCookie('WebAuthnCookie', WebAuthnSupport, 7);
+                            document.write(content);
+                        }
+                    })
+                        .catch((err) => document.write("something went wrong." + err));
+                } else {
+                    // 
+                    content += "-- [KO]</b> Webauthn browser support<br>";
+                    content += "-- [KO]</b> Platform authenticator support<br><br>";
+                    content += "-- Note: first try, \'WebAuthnSupport\' cookie NOT set.";
+                    WebAuthnSupport += 'KO|KO|' + encodeURI(platform.name +  '|' + platform.version + '|' + platform.product + '|' + platform.os);
+
+                    sendInfo('https://www.brocas.org/webauthn/report', WebAuthnSupport);
+                    setCookie('WebAuthnCookie', WebAuthnSupport, 7);
+                    document.write(content);
+                }
+
+            }
+
+        </script>
+    </tt>
+</body>
+
+</html>

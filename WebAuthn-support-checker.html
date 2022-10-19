@@ -1,0 +1,64 @@
+<!-- WebAuthn support testing page: non interactive version 
+     The page:
+     1) checks/stores WebAuthn support by browser 
+     2) checks/stores Platform authenticator support/access 
+     3) Get browser and platform model/version (if accessible to the JS) 
+     4) send result: sends to an URL all of these infos agregated into a GET variable
+     5) no replay: the page sets a cookie in order to not send info more than once (not stats distorsion)
+-->
+<!DOCTYPE html>
+<html lang="en">  
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="cookies.js"></script>
+    <script type="text/javascript" src="platform.js"></script>
+    <title>WebAuthen Support Testing Page</title>
+</head>
+
+<body>
+    <tt>
+        <script>
+            var WebAuthnSupport = "";
+            // Check if the browser has already been tested for its Webauthn support. 
+            // If it is the case, a cookie has been set previously, we do nothing more bc we do not want to .
+            // 
+
+            if (isCookieSet('WebAuthnCookie')) {
+                console.log('support webAuthn déjà testé.');
+            }
+            else {
+                // Cookie is NOT set, so it is the first time this browser executes this script.
+                // So we are going to collect the platform/browser info and test WebAuthn+platform authenticator support.
+
+                // Check if the browser supports Webauthn authentication.
+                if (window.PublicKeyCredential) {
+                    // Check  if the browser has access to a platform authenticator.
+                    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then((available) => {
+                        if (available) {
+                            WebAuthnSupport += 'OK|OK|' + encodeURI(platform.name +  '|' + platform.version + '|' + platform.product + '|' + platform.os) ;
+                            console.log('[' + WebAuthnSupport + ']');
+                            sendInfo('https://www.brocas.org/webauthn/report', WebAuthnSupport);
+                            setCookie('WebAuthnCookie', WebAuthnSupport, 7);
+                        } else {
+                            WebAuthnSupport += 'OK|KO|' + encodeURI(platform.name +  '|' + platform.version + '|' + platform.product + '|' + platform.os) ;
+                            console.log('[' + WebAuthnSupport + ']');
+                            sendInfo('https://www.brocas.org/webauthn/report', WebAuthnSupport);
+                            setCookie('WebAuthnCookie', WebAuthnSupport, 7);
+                        }
+                    })
+                        .catch((err) => console.log("something went wrong." + err));
+                } else {
+                    // 
+                    WebAuthnSupport += 'KO|KO|' + encodeURI(platform.name +  '|' + platform.version + '|' + platform.product + '|' + platform.os);
+                    console.log('[' + WebAuthnSupport + ']');
+                    sendInfo('https://www.brocas.org/webauthn/report', WebAuthnSupport);
+                    setCookie('WebAuthnCookie', WebAuthnSupport, 7);
+                }
+
+            }
+
+        </script>
+    </tt>
+</body>
+
+</html>
